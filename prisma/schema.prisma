@@ -1,0 +1,72 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlserver"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id String @id
+  email String @unique
+  password String
+  name String
+  profilePic String
+  createdGroups Group[] @relation(name: "GroupCreator")
+  memberGroups Group[]
+  expenses Expense[]
+  expenseSplits ExpenseSplit[]
+  paymentsMade Payment[] @relation(name: "FromUser")
+  paymentsRecieved Payment[] @relation(name: "ToUser")
+  createdAt DateTime
+}
+model Group{
+  id String @id
+  name String
+  description String
+  creatorId String
+  user User @relation(fields: [creatorId] , references: [id] , name: "GroupCreator" , onDelete: NoAction , onUpdate: NoAction)
+  members User[]
+  expenses Expense[]
+  createdAt DateTime
+ }
+ 
+model Expense{
+  id String @id
+  description String
+  paidBy String
+  user User @relation(fields: [paidBy] , references: [id],onDelete: NoAction , onUpdate: NoAction)
+  date DateTime
+  amount Decimal
+  groupId String
+  group Group @relation(fields: [groupId] , references: [id] ,onDelete: NoAction , onUpdate: NoAction)
+  expenseSplits ExpenseSplit[]
+}
+
+model ExpenseSplit{
+  id String @id
+  userId String
+  expenseId String
+  amountOwed Decimal
+  user User @relation(fields: [userId] , references: [id])
+  expense Expense @relation(fields: [expenseId] , references: [id])
+}
+
+model Payment {
+  id String @id
+  groupId String
+  fromUserID String
+  toUserId String
+  date DateTime
+  note String
+  amount Float
+  fromUser User @relation(fields: [fromUserID] , references: [id] , name: "FromUser" , onDelete: NoAction , onUpdate: NoAction)
+  toUser User @relation(fields: [toUserId] , references: [id] , name: "ToUser")
+}
